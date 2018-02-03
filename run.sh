@@ -8,21 +8,23 @@ while true; do
 
   # Download playlist
   echo 'Updating Playlist'
-  mkdir -p "$VIDEO_DIR"
-  ./download_playlist.sh | tee "${DIR}/youtube-dl.log"
+  ./download_playlist.sh 2>&1 | tee "${DIR}/youtube-dl.log"
 
   # Play each file in videos
   for f in $(ls "$VIDEO_DIR"); do
-    if [[ $DELAY > 0 ]]; then
+    if [ $DELAY -gt 0 ]; then
       vcgencmd display_power 1  # Turn on screen as it may have been off
     fi
 
-    echo "Last played $f" | tee "${DIR}/last-played.log"
+    echo "Last played $f" | tee "${DIR}/playing.log"
     omxplayer -b -o local "${VIDEO_DIR}/${f}"
+    CAN_SLEEP=$?
 
-    if [[ $DELAY > 0 ]]; then
+    if [ $DELAY -gt 0 ]; then
       vcgencmd display_power 0  # Turn off screen
-      sleep $DELAY
+      if [ $CAN_SLEEP -eq 0 ]; then
+        sleep $DELAY
+      fi
     fi
   done
 
